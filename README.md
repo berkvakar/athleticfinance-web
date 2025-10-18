@@ -23,6 +23,4 @@ Frontend: React, React-Bootstrap, TypeScript (optional)
 
 Styling: CSS, responsive design with clamp()
 
-Assets: PNG logos for light/dark themes
-
 Backend (planned): AWS Cognito, DynamoDB, Lambda functions, Stripe for payments
