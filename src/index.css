@@ -30,6 +30,7 @@ h1{
   font-size: clamp(36px, 2vw, 22px);
 }
 
+
 .row {
   display: flex;
   flex-wrap: wrap;

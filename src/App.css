@@ -49,7 +49,7 @@ button:hover {
     margin-top: 100px;
     padding: 5px 15px;
     font-size: clamp(17px, 2vw, 22px);
-    font-weight: 500;
+    font-weight: 300;
     font-family: inherit;
     color: white;
     transition: transform 0.3s ease-in-out;
@@ -66,9 +66,9 @@ button:hover {
 
 .footer-row{
   position: absolute;
-  bottom: 30px;
+  bottom: 10px;
   width: 100%;
-  gap: 400px;  
+  gap: clamp(100px, 2vw, 200px);
   justify-content: center;
   .footer-button{
     color: white;
@@ -78,3 +78,25 @@ button:hover {
   }
 }
 
+/* Fade and Slide Animation */
+.page-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms ease-in, transform 300ms ease-in;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: opacity 300ms ease-in, transform 300ms ease-in;
+}
