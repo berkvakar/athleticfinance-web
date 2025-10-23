@@ -2,6 +2,7 @@ import { Row, Col, Form } from "react-bootstrap";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./JoinPage.css";
+import { signupUser } from "../../api/sign-up";
 
 export default function JoinPage() {
   const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ export default function JoinPage() {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: value.trim(),
     }));
   };
 
@@ -34,16 +35,26 @@ export default function JoinPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       console.log("Form data submitted", formData);
+      try {
+        await signupUser(formData);
+        console.log(
+          "Signup successful! Please check your email to verify your account."
+        );
+        navigate("/plans");
+      } catch (err) {
+        alert(err.message);
+      }
+      localStorage.setItem("signupData", JSON.stringify(formData));
       navigate("/plans");
     }
   };
 
   return (
-    <Col className="join-body">
+    <div className="main-body" style={{ viewTransitionName: "main-body" }}>
       <Row className="info">
         <span className="info-line">
           Athletic Finance simplifies the business of sport. One notification.
@@ -140,6 +151,6 @@ export default function JoinPage() {
       <Row>
         <button></button>
       </Row>
-    </Col>
+    </div>
   );
 }

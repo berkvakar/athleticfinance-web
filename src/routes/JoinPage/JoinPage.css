@@ -1,5 +1,4 @@
-
-.join-body .info {
+.main-body .info {
   margin: 0;
   padding-left: 10px;
   padding-right: 10px;
@@ -31,8 +30,8 @@
   margin-bottom: 20px;
   margin-top: 20px;
   box-sizing: border-box;
-  border: 1px solid #ddd;
-  background-color: rgb(19, 19, 19);
+  /* border: 1px solid #ddd; */
+  background-color: rgb(30, 30, 30);
   transition: border 0.3s ease;
 }
 
@@ -62,5 +61,44 @@
     border-style: groove;
     border-radius: 10px;
     padding: 2px 10px;
+  }
+}
+
+
+/* Target only main-body */
+::view-transition-old(main-body),
+::view-transition-new(main-body) {
+  animation-duration: 0.6s; 
+}
+
+
+::view-transition-old(main-body) {
+  animation-name: slide-left-out;
+}
+
+
+::view-transition-new(main-body) {
+  animation-name: slide-left-in;
+}
+
+@keyframes slide-left-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%); 
+  }
+}
+
+@keyframes slide-left-in {
+  from {
+    opacity: 0;
+    transform: translateX(50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
