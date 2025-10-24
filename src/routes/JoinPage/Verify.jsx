@@ -1,0 +1,172 @@
+import { Row, Col } from "react-bootstrap";
+import { useState, useRef } from "react";
+import "./JoinPage.css";
+import { verifyUser } from "../../api/verify";
+import { resendConfirmationCode } from "../../api/resend-code";
+import { useNavigate } from "react-router-dom";
+
+
+
+export default function Verify() {
+  const navigate = useNavigate();
+
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const inputRefs = [
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+  ];
+
+  const handleVerify = async () => {
+    if (code.length !== 6) {
+      setError("Please enter a complete 6-digit code");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const username = localStorage.getItem("signupUsername");
+      const success = await verifyUser(username, code);
+      
+      if (success) {
+        navigate("/plans");
+      } else {
+        setError("Invalid or expired code. Please try again.");
+      }
+    } catch (err) {
+      setError("Verification failed. Please check your code and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const username = localStorage.getItem("signupUsername");
+      const result = await resendConfirmationCode(username);
+      
+      if (result.success) {
+        setError(""); // Clear any existing errors
+        alert("New verification code sent to your email!");
+      } else {
+        setError("Failed to resend code. Please try again.");
+      }
+    } catch (err) {
+      setError("Failed to resend code. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  function handleInput(e, index) {
+    const input = e.target;
+    const previousInput = inputRefs[index - 1];
+    const nextInput = inputRefs[index + 1];
+    const newCode = [...code];
+    if (/^[a-z]+$/.test(input.value)) {
+      const uc = input.value.toUpperCase();
+      newCode[index] = uc;
+      inputRefs[index].current.value = uc;
+    } else {
+      newCode[index] = input.value;
+    }
+    setCode(newCode.join(""));
+    input.select();
+    if (input.value === "") {
+      if (previousInput) {
+        previousInput.current.focus();
+      }
+    } else if (nextInput) {
+      nextInput.current.select();
+    }
+  }
+
+  function handleFocus(e) {
+    e.target.select();
+  }
+
+  function handleKeyDown(e, index) {
+    const input = e.target;
+    const previousInput = inputRefs[index - 1]
+
+    if ((e.keyCode === 8 || e.keyCode === 46) && input.value === "") {
+      e.preventDefault();
+      setCode(
+        (prevCode) => prevCode.slice(0, index) + prevCode.slice(index + 1)
+      );
+      if (previousInput) {
+        previousInput.current.focus();
+      }
+    }
+  }
+
+  const handlePaste = (e) => {
+    const pastedCode = e.clipboardData.getData("text");
+    if (pastedCode.length === 6) {
+      setCode(pastedCode);
+      inputRefs.forEach((inputRef, index) => {
+        inputRef.current.value = pastedCode.charAt(index);
+      });
+    }
+  };
+
+  return (
+    <div className="verify-body">
+      <Row>
+          {[0, 1, 2, 3, 4, 5].map((index) => (
+            <input
+              className="digit-box"
+              key={index}
+              type="text"
+              maxLength={1}
+              onChange={(e) => handleInput(e, index)}
+              ref={inputRefs[index]}
+              autoFocus={index === 0}
+              onFocus={handleFocus}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              onPaste={handlePaste}
+            />
+          ))}
+      </Row>
+      
+      {error && (
+        <Row className="error-row">
+          <div className="error-message" style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
+            {error}
+          </div>
+        </Row>
+      )}
+      
+      <Row className="button-row">
+        <button 
+          className="verify-button" 
+          onClick={handleVerify}
+          disabled={isLoading}
+        >
+          {isLoading ? "Verifying..." : "Verify"}
+        </button>
+      </Row>
+      
+      <Row className="button-row">
+        <button 
+          className="resend-button" 
+          onClick={handleResendCode}
+          disabled={isLoading}
+        >
+          {isLoading ? "Sending..." : "Resend Code"}
+        </button>
+      </Row>
+    </div>
+  );
+}

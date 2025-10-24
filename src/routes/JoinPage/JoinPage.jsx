@@ -1,7 +1,7 @@
 import { Row, Col, Form } from "react-bootstrap";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./JoinPage.css";
+import Verify from "./Verify";
 import { signupUser } from "../../api/sign-up";
 
 export default function JoinPage() {
@@ -18,10 +18,18 @@ export default function JoinPage() {
       ...prevData,
       [name]: value.trim(),
     }));
+    
+    // Clear error for the field being changed
+    if (errors[name]) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [name]: "",
+      }));
+    }
   };
 
-  const navigate = useNavigate();
   const [errors, setErrors] = useState({});
+  const [verify, setVerify] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -38,22 +46,24 @@ export default function JoinPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Form data submitted", formData);
       try {
-        await signupUser(formData);
+        const { username } = await signupUser(formData);
+        localStorage.setItem("signupUsername", username);
+        localStorage.setItem("signupData", JSON.stringify(formData));
+        setVerify(true);
         console.log(
           "Signup successful! Please check your email to verify your account."
         );
-        navigate("/plans");
       } catch (err) {
-        alert(err.message);
+        // Show custom error message for email already exists
+        setErrors({ email: "Email already exists" });
       }
-      localStorage.setItem("signupData", JSON.stringify(formData));
-      navigate("/plans");
     }
   };
 
-  return (
+  return verify ? (
+    <Verify />
+  ) : (
     <div className="main-body" style={{ viewTransitionName: "main-body" }}>
       <Row className="info">
         <span className="info-line">

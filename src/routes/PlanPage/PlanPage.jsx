@@ -8,29 +8,7 @@ export default function PlanPage() {
   const handleJoin = () => {
     console.log("pressed");
   };
-  // const handleJoin = async (planName) => {
-    // const formData = JSON.parse(localStorage.getItem("signupData"));
-    // if (!formData) return alert("No Sign-Up Data Found!");
 
-    // const command = new SignUpCommand({
-    //   ClientId: clientId,
-    //   Username: formData.firstName + formData.lastName + Date.now(),
-    //   Password: formData.password,
-    //   UserAttributes: [
-    //     { Name: "email", Value: formData.email },
-    //     { Name: "name", Value: formData.firstName + " " + formData.lastName },
-    //     { Name: "custom:PaidPlan", Value: planName },
-    //   ],
-    // });
-
-    // try {
-    //   await client.send(command);
-    //   alert("Signup successful! Check your email to verify your account.");
-    //   localStorage.removeItem("signupData");
-    // } catch (err) {
-    //   alert(err.message);
-    // }
-  // };
 
   const prices = {
     Monthly: { af: 1, afPlus: 2 },

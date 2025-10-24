@@ -102,3 +102,42 @@
     transform: translateX(0);
   }
 }
+
+.verify-body{
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+
+}
+.digit-box{
+  width: 4vmax;
+  height:  4vmax;
+  margin: 0 8px;
+  font-size: inherit;
+  text-align: center;
+  border-radius: 8px;
+  border-style: none;
+  background: #3a3939;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  color: white;
+  outline: none;
+  caret-color: transparent;
+  user-select: none;
+}
+
+.digit-box::selection {
+  background: transparent;
+  color: white;
+}
+
+
+.button-row{
+  justify-content: center;
+  padding: 30px;
+}
+
+.resend-button {
+  background-color: transparent;
+  border-radius: 10px;
+  padding: 2px 10px;
+}

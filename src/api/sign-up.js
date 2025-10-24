@@ -26,8 +26,15 @@ export async function signupUser({ firstName, lastName, email, password }) {
 
   try {
     const response = await client.send(command);
-    return response; 
+    return { response, username };
   } catch (err) {
-    throw new Error(err.message);
+    // Handle specific Cognito errors for duplicate emails
+    if (err.name === 'InvalidParameterException' && err.message.includes('email')) {
+      throw new Error('This email address is already registered. Please use a different email or try logging in.');
+    } else if (err.name === 'AliasExistsException') {
+      throw new Error('An account with this email already exists. Please try logging in instead.');
+    } else {
+      throw new Error(err.message);
+    }
   }
 }
