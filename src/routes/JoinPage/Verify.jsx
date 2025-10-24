@@ -1,8 +1,7 @@
 import { Row, Col } from "react-bootstrap";
 import { useState, useRef } from "react";
 import "./JoinPage.css";
-import { verifyUser } from "../../api/verify";
-import { resendConfirmationCode } from "../../api/resend-code";
+import { verifyUser, resendConfirmationCode } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 
 

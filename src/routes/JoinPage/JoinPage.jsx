@@ -2,7 +2,7 @@ import { Row, Col, Form } from "react-bootstrap";
 import { useState } from "react";
 import "./JoinPage.css";
 import Verify from "./Verify";
-import { signupUser } from "../../api/sign-up";
+import { signupUser } from "../../api/auth";
 
 export default function JoinPage() {
   const [formData, setFormData] = useState({
