@@ -1,9 +1,10 @@
-import { BrowserRouter as Router, Routes, Route ,createBrowserRouter, RouterProvider,} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route ,createBrowserRouter, RouterProvider, redirect} from "react-router-dom";
 import Layout from "./Layout";
 import LandingPage from "./routes/LandingPage/LandingPage";
 import JoinPage from "./routes/JoinPage/JoinPage";
 import Articles from "./routes/Articles/Articles";
 import PlanPage from "./routes/PlanPage/PlanPage";
+import { canAccessJoin, canAccessPlans, isUserAuthenticated } from "./api/auth";
 
 import "./App.css";
 // function App() {
@@ -28,15 +29,39 @@ const router = createBrowserRouter(
       element: <Layout />,
       children: [
         { index: true, element: <LandingPage /> },
-        { path: "join", element: <JoinPage /> },
-        { path: "plans", element: <PlanPage /> },
+        { 
+          path: "join", 
+          element: <JoinPage />, 
+          loader: async () => {
+            // If already authenticated, send to plans
+            if (await isUserAuthenticated()) {
+              return redirect("/plans");
+            }
+            if (!canAccessJoin()) {
+              return redirect("/");
+            }
+            return null;
+          }
+        },
+        { 
+          path: "plans", 
+          element: <PlanPage />, 
+          loader: async () => {
+            // Allow if user verified in-session OR currently authenticated
+            if (canAccessPlans()) {
+              return null;
+            }
+            if (await isUserAuthenticated()) {
+              return null;
+            }
+            return redirect("/");
+          }
+        },
         { path: "articles", element: <Articles /> },
       ],
     },
   ],
-  {
-    viewTransitions: true,
-  }
+  {}
 );
 
 function App() {

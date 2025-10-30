@@ -1,4 +1,4 @@
-import { signUp, confirmSignUp, resendSignUpCode, getCurrentUser } from 'aws-amplify/auth';
+import { signUp, confirmSignUp, resendSignUpCode, getCurrentUser, signOut } from 'aws-amplify/auth';
 
 /**
  * Sign up a new user with Cognito
@@ -14,7 +14,8 @@ export async function signupUser({ firstName, lastName, email, password }) {
         userAttributes: {
           email,
           name: `${firstName} ${lastName}`,
-          'custom:PaidPlan': 'none'
+          'custom:PaidPlan': 'none',
+          'custom:referral': 'false'
         }
       }
     });
@@ -23,12 +24,12 @@ export async function signupUser({ firstName, lastName, email, password }) {
     return { username };
   } catch (error) {
     console.error('SignUp error:', error);
-    
-    // Handle specific Cognito errors
-    if (error.name === 'UsernameExistsException' || error.message.includes('email')) {
-      throw new Error('Email already exists');
+    // Re-throw known errors so caller can map to proper UI
+    if (error && error.name) {
+      throw error;
     }
-    throw new Error(error.message);
+    // Fallback with message
+    throw new Error(error?.message || 'Signup failed');
   }
 }
 
@@ -71,8 +72,68 @@ export async function getAuthenticatedUser() {
   try {
     const user = await getCurrentUser();
     return user;
-  } catch (error) {
+  } catch{
     return null;
   }
+}
+
+/**
+ * Check if user is authenticated (has valid session)
+ */
+export async function isUserAuthenticated() {
+  try {
+    await getCurrentUser();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Gate: allow entering /join only after explicit CTA click
+ */
+export function canAccessJoin() {
+  return sessionStorage.getItem('allowJoinAccess') === 'true';
+}
+
+export function grantJoinAccess() {
+  sessionStorage.setItem('allowJoinAccess', 'true');
+}
+
+/**
+ * Gate: allow entering /plans only after successful verification
+ */
+export function canAccessPlans() {
+  return sessionStorage.getItem('signupComplete') === 'true';
+}
+
+export function markSignupComplete() {
+  sessionStorage.setItem('signupComplete', 'true');
+}
+
+/**
+ * Dev utility: completely sign out and clear all client storage
+ */
+export async function devSignOut() {
+  try {
+    // Best-effort global sign out from Cognito
+    await signOut({ global: true });
+  } catch (error) {
+    console.warn('Sign out error (ignored for dev):', error);
+  } finally {
+    try { sessionStorage.clear(); } catch {}
+    try { localStorage.clear(); } catch {}
+    try {
+      // Expire all cookies at root path
+      document.cookie.split(';').forEach((cookie) => {
+        const eqIndex = cookie.indexOf('=');
+        const name = (eqIndex > -1 ? cookie.slice(0, eqIndex) : cookie).trim();
+        if (name) {
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        }
+      });
+    } catch {}
+  }
+  return true;
 }
 

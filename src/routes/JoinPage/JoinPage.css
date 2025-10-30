@@ -30,9 +30,65 @@
   margin-bottom: 20px;
   margin-top: 20px;
   box-sizing: border-box;
-  /* border: 1px solid #ddd; */
+  border: none;
   background-color: rgb(30, 30, 30);
-  transition: border 0.3s ease;
+  transition: none;
+}
+
+.form-control:focus, .form-control:active {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.password-group {
+  position: relative;
+}
+
+.password-input {
+  padding-right: clamp(30px, 3.5vw, 44px);
+  transition: none;
+}
+
+.toggle-visibility {
+  position: absolute;
+  right: 12px;
+  top: 0;
+  bottom: 0;
+  margin-top: auto;
+  margin-bottom: auto;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ccc;
+  padding: 4px;
+  width: clamp(18px, 2.3vw, 28px);
+  height: clamp(18px, 2.3vw, 28px);
+  transition: none;
+  transform: none;
+}
+
+.toggle-visibility:focus {
+  outline: none;
+}
+
+.toggle-visibility svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Ensure no visual changes on hover/active/focus-visible */
+.toggle-visibility:hover,
+.toggle-visibility:active,
+.toggle-visibility:focus-visible {
+  color: #ccc;
+  background: transparent;
+  box-shadow: none;
+  transition: none;
+  transform: none !important;
+  scale: 1 !important;
+  filter: none;
 }
 
 .error-message {
@@ -45,13 +101,10 @@
   align-self: baseline;
   position: absolute;
   opacity: 0;
-  transform: translateY(-4px);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
 .error-message.show {
   opacity: 1;
-  transform: translateY(0);
 }
 
 .form-button-container {
@@ -68,38 +121,41 @@
 /* Target only main-body */
 ::view-transition-old(main-body),
 ::view-transition-new(main-body) {
-  animation-duration: 0.6s; 
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  transform-style: flat;
 }
-
 
 ::view-transition-old(main-body) {
-  animation-name: slide-left-out;
+  animation-name: slide-out;
 }
-
 
 ::view-transition-new(main-body) {
-  animation-name: slide-left-in;
+  animation-name: slide-in;
 }
 
-@keyframes slide-left-out {
+@keyframes slide-out {
   from {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translateX(-50%); 
+    transform: translateX(-100%) scale(1);
   }
 }
 
-@keyframes slide-left-in {
+@keyframes slide-in {
   from {
     opacity: 0;
-    transform: translateX(50%);
+    transform: translateX(100%) scale(1);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
   }
 }
 

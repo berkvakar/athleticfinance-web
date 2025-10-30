@@ -1,12 +1,12 @@
 import { Row, Col } from "react-bootstrap";
 import { useState, useRef } from "react";
 import "./JoinPage.css";
-import { verifyUser, resendConfirmationCode } from "../../api/auth";
+import { verifyUser, resendConfirmationCode, markSignupComplete } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 
 
 
-export default function Verify() {
+export default function Verify({ username }) {
   const navigate = useNavigate();
 
   const [code, setCode] = useState("");
@@ -32,15 +32,15 @@ export default function Verify() {
     setError("");
 
     try {
-      const username = localStorage.getItem("signupUsername");
       const success = await verifyUser(username, code);
       
       if (success) {
+        markSignupComplete();
         navigate("/plans");
       } else {
         setError("Invalid or expired code. Please try again.");
       }
-    } catch (err) {
+    } catch{
       setError("Verification failed. Please check your code and try again.");
     } finally {
       setIsLoading(false);
@@ -52,7 +52,6 @@ export default function Verify() {
     setError("");
 
     try {
-      const username = localStorage.getItem("signupUsername");
       const result = await resendConfirmationCode(username);
       
       if (result.success) {
@@ -61,7 +60,7 @@ export default function Verify() {
       } else {
         setError("Failed to resend code. Please try again.");
       }
-    } catch (err) {
+    } catch{
       setError("Failed to resend code. Please try again.");
     } finally {
       setIsLoading(false);
