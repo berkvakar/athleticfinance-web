@@ -31,9 +31,11 @@ export default function LandingPage() {
           <button className="join-button">Join</button>
         </Link>
       )}
-      <div style={{ marginTop: 16 }}>
-        <button className="join-button" onClick={async () => { await devSignOut(); navigate('/', { replace: true }); }}>Sign out (dev)</button>
-      </div>
+      {canViewPlans && (
+        <div style={{ marginTop: 16 }}>
+          <button className="join-button" onClick={async () => { await devSignOut(); navigate('/', { replace: true }); }}>Sign out (dev)</button>
+        </div>
+      )}
     </div>
   );
 }

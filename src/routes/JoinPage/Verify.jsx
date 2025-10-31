@@ -11,7 +11,8 @@ export default function Verify({ username }) {
 
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const inputRefs = [
     useRef(null),
@@ -28,7 +29,7 @@ export default function Verify({ username }) {
       return;
     }
 
-    setIsLoading(true);
+    setIsVerifying(true);
     setError("");
 
     try {
@@ -36,6 +37,10 @@ export default function Verify({ username }) {
       
       if (success) {
         markSignupComplete();
+        try {
+          sessionStorage.removeItem('pendingVerification');
+          sessionStorage.removeItem('pendingUsername');
+        } catch {}
         navigate("/plans");
       } else {
         setError("Invalid or expired code. Please try again.");
@@ -43,12 +48,12 @@ export default function Verify({ username }) {
     } catch{
       setError("Verification failed. Please check your code and try again.");
     } finally {
-      setIsLoading(false);
+      setIsVerifying(false);
     }
   };
 
   const handleResendCode = async () => {
-    setIsLoading(true);
+    setIsResending(true);
     setError("");
 
     try {
@@ -63,7 +68,7 @@ export default function Verify({ username }) {
     } catch{
       setError("Failed to resend code. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsResending(false);
     }
   };
 
@@ -120,7 +125,7 @@ export default function Verify({ username }) {
   };
 
   return (
-    <div className="verify-body">
+    <Row className="verify-body">
       <Row>
           {[0, 1, 2, 3, 4, 5].map((index) => (
             <input
@@ -150,9 +155,9 @@ export default function Verify({ username }) {
         <button 
           className="verify-button" 
           onClick={handleVerify}
-          disabled={isLoading}
+          disabled={isVerifying || isResending}
         >
-          {isLoading ? "Verifying..." : "Verify"}
+          {isVerifying ? "Verifying..." : "Verify"}
         </button>
       </Row>
       
@@ -160,11 +165,11 @@ export default function Verify({ username }) {
         <button 
           className="resend-button" 
           onClick={handleResendCode}
-          disabled={isLoading}
+          disabled={isResending || isVerifying}
         >
-          {isLoading ? "Sending..." : "Resend Code"}
+          {isResending ? "Sending..." : "Resend Code"}
         </button>
       </Row>
-    </div>
+    </Row>
   );
 }
