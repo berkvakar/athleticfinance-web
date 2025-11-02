@@ -1,10 +1,12 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Row, Col } from 'react-bootstrap';
 import Logos from './assets';
 import { motion } from 'framer-motion';
+import { devSignOut } from './api/auth';
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const shouldAnimate = !!location.state?.animate;
   const direction = location.state?.dir === 'reverse' ? 'reverse' : 'forward';
   const variants = direction === 'reverse'
@@ -15,6 +17,11 @@ export default function Layout() {
     : {
         initial: { x: '100%' },
         animate: { x: 0, transition: { type: 'spring', stiffness: 260, damping: 28 } }
+      };
+
+  const handleDevSignOut = async () => {
+    await devSignOut();
+    navigate('/', { replace: true });
       };
 
   return (
@@ -56,6 +63,15 @@ export default function Layout() {
         </Col>
         <Col xs="auto">
           <Link to="/legal"><button className="footer-button">Legal</button></Link>
+        </Col>
+        <Col xs="auto">
+          <button 
+            className="footer-button" 
+            onClick={handleDevSignOut}
+            style={{ fontSize: '12px', opacity: 0.6 }}
+          >
+            Dev: Sign Out
+          </button>
         </Col>
       </Row>
     </>

@@ -1,0 +1,185 @@
+DynamoDB Tables Implementation Guide
+=====================================
+
+This file explains how the DynamoDB tables will be used in the partnership program.
+
+
+TABLE 1: PartnerReferrals
+--------------------------
+
+Purpose:
+This table stores every individual referral - one record per user that was referred.
+
+What gets stored:
+- When a user signs up with a referral link, we create a record here
+- The record tracks the user's journey: clicked link → signed up → verified → paid
+- When they pay, we update the record with what plan they ACTUALLY chose (AF or AF+)
+- We also record billing cycle (Monthly or Annual) and calculate partner earnings
+
+Key Structure:
+- Partition Key: partnerId (which partner referred them)
+- Sort Key: referralId (unique ID for this specific referral)
+
+Why this structure:
+- Can quickly get all referrals for a specific partner (query by partnerId)
+- Each referral has unique ID so no conflicts
+
+Global Secondary Index:
+- Index name: referredUserId-index
+- Index key: referredUserId
+- Purpose: When a user pays, we need to find their referral record quickly by looking up their userId (not the partner's ID)
+
+
+TABLE 2: PartnerStats
+----------------------
+
+Purpose:
+This table stores aggregated statistics for each partner - summary numbers, not individual records.
+
+What gets stored:
+- Total counts: clicks, signups, paid conversions, active subscriptions
+- Breakdown: how many AF vs AF+ conversions, Monthly vs Annual
+- Financial: total earnings, revenue, pending earnings
+- Conversion rates: click-to-signup, signup-to-payment percentages
+
+Key Structure:
+- Partition Key: partnerId (one record per partner)
+
+Why this structure:
+- One record per partner makes it super fast to get dashboard stats
+- Instead of counting thousands of referrals every time, we just read one record
+- We update the numbers incrementally as things happen
+
+When it gets updated:
+- When referral link clicked: increment totalClicks
+- When user signs up: increment totalSignups, afSignups or afPlusSignups
+- When user pays: increment totalPaid, update AF/AF+ counts, add to earnings, recalculate conversion rates
+
+
+HOW THE TABLES WORK TOGETHER
+-----------------------------
+
+Example Flow:
+
+1. User clicks referral link:
+   - Update PartnerStats: totalClicks += 1
+   - (Optional: Create record in ReferralEvents table for detailed analytics)
+
+2. User signs up:
+   - Create new record in PartnerReferrals table with status "signed_up"
+   - Update PartnerStats: totalSignups += 1, afSignups += 1 (default to AF)
+
+3. User verifies email:
+   - Update PartnerReferrals record: status = "verified", verifiedAt = timestamp
+   - Update PartnerStats: totalVerified += 1
+
+4. User selects plan and pays:
+   - Use referredUserId-index GSI to find the referral record quickly
+   - Update PartnerReferrals record:
+     * status = "paid"
+     * planType = "AFPlus" (what they actually chose)
+     * billingCycle = "Monthly" (what they actually chose)
+     * paymentAmount = 29.99
+     * partnerEarnings = 7.50 (calculated based on plan)
+     * paidAt = timestamp
+   - Update PartnerStats:
+     * totalPaid += 1
+     * afPlusPaid += 1 (or afPaid if they chose AF)
+     * afPlusMonthlyPaid += 1 (or Annual)
+     * totalEarnings += 7.50
+     * Recalculate conversion rates
+
+5. Partner opens dashboard:
+   - Query PartnerStats table by partnerId (instant, one record)
+   - Query PartnerReferrals table by partnerId, sorted by paidAt DESC, limit 50 (for recent referrals list)
+   - Display all stats instantly without counting thousands of records
+
+
+WHY THIS DESIGN IS EFFICIENT
+-----------------------------
+
+PartnerReferrals:
+- Stores detailed individual records for audit trail and detailed reporting
+- Can see exactly who converted, when, what they paid for
+- Can filter and analyze historical data
+
+PartnerStats:
+- Pre-calculated aggregates make dashboard loads instant
+- No need to scan thousands of records every time partner views dashboard
+- Update incrementally as events happen (very fast)
+
+Query Patterns:
+- Get all referrals for partner: Query PartnerReferrals by partnerId
+- Get referral for specific user: Query PartnerReferrals by referredUserId (using GSI)
+- Get partner dashboard stats: GetItem on PartnerStats by partnerId (instant)
+
+
+DATA CONSISTENCY
+----------------
+
+When writing data:
+1. Always update PartnerReferrals first (source of truth)
+2. Then update PartnerStats (derived/aggregated data)
+
+If stats get out of sync:
+- Can recalculate by scanning PartnerReferrals and aggregating
+- Better to keep stats accurate incrementally to avoid needing recalculation
+
+Error handling:
+- If PartnerReferrals write succeeds but PartnerStats fails, that's okay
+- PartnerReferrals is the source of truth, stats can be recalculated
+- But try to update both atomically when possible
+
+
+SCALABILITY
+-----------
+
+As you grow:
+- 1,000 referrals: Works perfectly, very fast
+- 10,000 referrals: Still fast, dashboard queries remain instant
+- 100,000 referrals: Still works, PartnerStats remains instant (one record)
+- 1,000,000 referrals: PartnerStats still instant, recent referrals query might need pagination
+
+On-demand capacity:
+- Tables automatically scale based on traffic
+- No need to pre-configure capacity
+- Pay only for what you use
+
+
+WHAT GETS STORED WHERE
+----------------------
+
+PartnerReferrals (detailed records):
+- Individual referral records
+- User journey timestamps
+- Final plan choice and billing cycle
+- Payment amounts and partner earnings per referral
+- Subscription status
+
+PartnerStats (aggregated summaries):
+- Total counts and breakdowns
+- Financial totals
+- Conversion rates
+- Last activity timestamp
+
+ReferralEvents (optional, detailed click tracking):
+- Every click on referral links
+- IP addresses, user agents
+- Click timestamps
+- Useful for advanced analytics
+
+
+IMPLEMENTATION NOTES
+--------------------
+
+Lambda functions will:
+- Write to PartnerReferrals for each event (signup, payment, etc.)
+- Update PartnerStats incrementally as events occur
+- Read from PartnerStats for dashboard (fast)
+- Read from PartnerReferrals for detailed referral lists
+
+Frontend will:
+- Call API Gateway endpoints that trigger Lambda functions
+- Lambda functions handle all DynamoDB operations
+- Never directly access DynamoDB from frontend (security)
+

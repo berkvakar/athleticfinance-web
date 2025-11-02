@@ -130,6 +130,29 @@
   }
 }
 
+.partner-signin-link {
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.signin-text {
+  font-size: clamp(14px, 1.8vw, 18px);
+  color: #ccc;
+  text-align: center;
+}
+
+.signin-link {
+  color: #ccc;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.signin-link:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
 
 /* Target only main-body */
 ::view-transition-old(main-body),
@@ -207,4 +230,4 @@
   padding: 30px;
   margin-bottom: 100px;
 }
- 
+

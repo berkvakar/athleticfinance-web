@@ -82,9 +82,29 @@ export default function JoinPage() {
         // Map Amplify/Cognito errors to friendly, field-specific messages
         const message = typeof error?.message === 'string' ? error.message : '';
         const lowerMsg = message.toLowerCase();
+        const errorName = error?.name || '';
+
+        // Check if error explicitly says to try logging in instead - this means account exists and is verified
+        // NEVER resend verification codes for these errors
+        if (lowerMsg.includes('please try logging in instead') || lowerMsg.includes('try logging in instead')) {
+          setErrors({ email: "An account with this email already exists. Please try logging in instead." });
+          return; // Don't show verify screen for this error
+        }
+
+        // UserLambdaValidationException with PreSignUp failed means Lambda rejected signup
+        // If it mentions "already exists", NEVER try to resend - account likely exists and is verified
+        if (errorName === 'UserLambdaValidationException' || message.includes('PreSignUp failed')) {
+          if (lowerMsg.includes('already exists')) {
+            setErrors({ email: "An account with this email already exists. Please try logging in instead." });
+            return; // Don't try to resend - account exists
+          }
+          // If PreSignUp failed but doesn't say "already exists", show generic error
+          setErrors({ email: "Signup failed. Please try again or contact support." });
+          return;
+        }
 
         if (error?.name === 'UsernameExistsException') {
-          // If the account exists but is unconfirmed, attempt to resend and move to Verify
+          // UsernameExistsException typically means unconfirmed account - try to resend code
           try {
             const result = await resendConfirmationCode(formData.email);
             if (result?.success) {
@@ -98,21 +118,10 @@ export default function JoinPage() {
             }
           } catch {}
           setErrors({ email: "Email already exists" });
-        } else if (message.includes('PreSignUp failed') || (lowerMsg.includes('already exists') && lowerMsg.includes('email'))) {
-          // Treat as existing account; try resend then move to Verify if possible
-          try {
-            const result = await resendConfirmationCode(formData.email);
-            if (result?.success) {
-              setUsername(formData.email);
-              try {
-                sessionStorage.setItem('pendingVerification', 'true');
-                sessionStorage.setItem('pendingUsername', formData.email);
-              } catch {}
-              setVerify(true);
-              return;
-            }
-          } catch {}
-          setErrors({ email: "Email already exists" });
+        } else if (lowerMsg.includes('already exists') && lowerMsg.includes('email')) {
+          // Generic "already exists" error - be conservative and don't resend
+          // Only resend if explicitly UsernameExistsException (handled above)
+          setErrors({ email: "An account with this email already exists. Please try logging in instead." });
         } else if (error?.name === 'InvalidPasswordException') {
           setErrors({ password: message || "Invalid password" });
         } else if (/password/i.test(message)) {
