@@ -10,5 +10,11 @@ Amplify.configure({
   }
 });
 
+// Lambda ARN for partner status check function
+// Stored here for reference - direct invocation from browser is not implemented
+// (would require API Gateway, AWS SDK, or backend service)
+export const PARTNER_CHECK_LAMBDA_ARN = import.meta.env.VITE_PARTNER_CHECK_LAMBDA_ARN || '';
+
+
 export default Amplify;
 

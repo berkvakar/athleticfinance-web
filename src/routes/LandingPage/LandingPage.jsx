@@ -1,18 +1,25 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { grantJoinAccess, isUserAuthenticated, canAccessPlans, devSignOut } from "../../api/auth";
+import { grantJoinAccess, isUserAuthenticated, canAccessPlans } from "../../api/auth";
 import "./LandingPage.css";
 
 export default function LandingPage() {
   const [canViewPlans, setCanViewPlans] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       const authed = await isUserAuthenticated();
+      console.log('[LandingPage] isUserAuthenticated() returned:', authed);
       const eligible = canAccessPlans();
-      if (mounted) setCanViewPlans(authed || eligible);
+      console.log('[LandingPage] canAccessPlans() returned:', eligible);
+      console.log('[LandingPage] Will show View Plans:', authed || eligible);
+      if (mounted) {
+        console.log('[LandingPage] Setting canViewPlans to:', authed || eligible);
+        setCanViewPlans(authed || eligible);
+      } else {
+        console.log('[LandingPage] Component unmounted before state update');
+      }
     })();
     return () => { mounted = false; };
   }, []);
@@ -30,11 +37,6 @@ export default function LandingPage() {
         <Link to="/join" state={{ animate: true, dir: 'forward' }} onClick={() => { grantJoinAccess(); }}>
           <button className="join-button">Join</button>
         </Link>
-      )}
-      {canViewPlans && (
-        <div style={{ marginTop: 16 }}>
-          <button className="join-button" onClick={async () => { await devSignOut(); navigate('/', { replace: true }); }}>Sign out (dev)</button>
-        </div>
       )}
     </div>
   );

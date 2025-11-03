@@ -4,6 +4,7 @@ import LandingPage from "./routes/LandingPage/LandingPage";
 import JoinPage from "./routes/JoinPage/JoinPage";
 import Articles from "./routes/Articles/Articles";
 import PlanPage from "./routes/PlanPage/PlanPage";
+import PartnershipApplication from "./routes/Partnership/PartnershipApplication";
 import { canAccessJoin, canAccessPlans, isUserAuthenticated } from "./api/auth";
 
 import "./App.css";
@@ -58,6 +59,7 @@ const router = createBrowserRouter(
           }
         },
         { path: "articles", element: <Articles /> },
+        { path: "partnership", element: <PartnershipApplication /> },
       ],
     },
   ],
